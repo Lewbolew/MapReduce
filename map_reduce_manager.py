@@ -2,6 +2,7 @@ from file_handler import FileHandler
 from map_reduce import MapReduce
 import multiprocessing
 import config
+import json
 import os
 class MapReduceManager(object):
 
@@ -17,16 +18,17 @@ class MapReduceManager(object):
         self.file_handler = FileHandler(input_dir, output_dir)
         self.file_handler.split_file(self.num_mappers)
 
-
     def run_mapper(self, thread_id):
         key = None
         value = None
-        with open(config.get_map_file_name(thread_id), "r") as f:
+        with open(config.get_name_of_piece(thread_id), "r") as f:
             key = f.readline()
             value = f.read()
-        if (self.clean_splited_data): os.unlink(config.get_map_file_name(thread_id))
+        if (self.clean_splited_data): os.unlink(config.get_name_of_piece(thread_id))
         mapper_result = self.map_reduce.mapper(key, value)
-
+        shuffled_result = self.map_reduce.shuffler(mapper_result)
+        with open(config.get_map_file_name(), "w") as f:
+            json.dump()
 
 
     def run_reducer(self, thread_id):
