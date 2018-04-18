@@ -26,13 +26,31 @@ class MapReduceManager(object):
             value = f.read()
         if (self.clean_splited_data): os.unlink(config.get_name_of_piece(thread_id))
         mapper_result = self.map_reduce.mapper(key, value)
-        shuffled_result = self.map_reduce.shuffler(mapper_result)
-        with open(config.get_map_file_name(), "w") as f:
-            json.dump()
+        slice_index = 0
+        stride = len(mapper_result) // self.num_reducers
+        for reducer_index in range(self.num_reducers):
+            with open(config.get_map_file_name(thread_id, reducer_index), "w+") as f:
+                json.dump([(key, value) for (key, value) in
+                            mapper_result[slice_index: slice_index + stride]],f)
+                slice_index += stride
+
 
 
     def run_reducer(self, thread_id):
-        pass
+        key_value_dict = {}
+        for mapper_index in range(self.num_mappers):
+            curr_map_json = None
+            with open(config.get_map_file_name(mapper_index, thread_id)) as f:
+                curr_map_json = json.load(f)
+            for (key, value) in curr_map_json:
+                if key in key_value_dict:
+                    key_value_dict[key].append(value)
+                else:
+                    key_value_dict[key] = [value]
+            if self.clean_splited_data: os.unlink(config.get_map_file_name(mapper_index, thread_id))
+        result = [self.map_reduce.reducer(key, key_value_dict[key]) for key in key_value_dict]
+        with open(config.get_reduce_result_file_name(thread_id), 'w+') as f:
+            json.dump(result, f)
 
     def run(self):
         mappers = list()

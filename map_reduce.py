@@ -9,6 +9,3 @@ class MapReduce(object):
 
     def reducer(self, key, list_values):
         pass
-
-    def shuffler(self, map_result):
-        pass
